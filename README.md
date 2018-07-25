@@ -23,12 +23,13 @@ Code repo for reproducing 2017 CVPR Oral paper using pytorch.
 2. [Caffe](http://caffe.berkeleyvision.org/) is required if you want convert caffe model to a pytorch model.
 
 ## Testing
-- cd model
-- wget https://www.dropbox.com/s/ae071mfm2qoyc8v/pose_model.pth?dl=0
-- mv pose_model.pth?dl=0 pose_model.pth
-- cd ..
-# put test.avi to sample_image/
-- python avi_demo.py --name test
+- $ cd model
+- $ wget https://www.dropbox.com/s/ae071mfm2qoyc8v/pose_model.pth?dl=0
+- $ mv pose_model.pth?dl=0 pose_model.pth
+- $ cd ..
+- # put "test.avi" to sample_image/
+- $ python avi_demo.py --name test
+- # Till now, you will get sample_image/test.txt
 
 ## Training
 - `cd training; bash getData.sh` to obtain the COCO images in `dataset/COCO/images/`, keypoints annotations in `dataset/COCO/annotations/` and [COCO official toolbox](https://github.com/pdollar/coco) in `dataset/COCO/coco/ . 
