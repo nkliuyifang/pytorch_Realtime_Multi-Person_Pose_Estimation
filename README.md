@@ -30,6 +30,7 @@ Code repo for reproducing 2017 CVPR Oral paper using pytorch.
 - put "test.avi" to sample_image/
 - $ python avi_demo.py --name test
 - Till now, you will get sample_image/test.txt (Each column: the time axis   Each row: x1,y1,x2,y2,...,x18,y18)
+- You may run "show_txt.m" using Matlab to learn more about the test.txt
 
 ## Training
 - `cd training; bash getData.sh` to obtain the COCO images in `dataset/COCO/images/`, keypoints annotations in `dataset/COCO/annotations/` and [COCO official toolbox](https://github.com/pdollar/coco) in `dataset/COCO/coco/ . 
