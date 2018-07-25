@@ -29,7 +29,7 @@ Code repo for reproducing 2017 CVPR Oral paper using pytorch.
 - $ cd ..
 - put "test.avi" to sample_image/
 - $ python avi_demo.py --name test
-- Till now, you will get sample_image/test.txt (Each column: the time axis   Each row: x1,y1,x2,y2,...,x18,y18)
+- Till now, you will get sample_image/test.txt (Each row: the time axis;   Each Column: x1,y1,x2,y2,...,x18,y18)
 - You may run "show_txt.m" using Matlab to learn more about the test.txt
 
 ## Training
