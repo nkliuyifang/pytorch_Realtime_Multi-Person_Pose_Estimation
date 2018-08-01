@@ -1,7 +1,16 @@
 clc;
 clear;
 
-Pose = importdata('ski.txt');
+scale = 0.8;
+
+im = imread('./sample_image/test1.jpg');
+im = imresize(im,0.8);
+
+figure(1);
+imshow(im,[]);
+
+
+Pose = importdata('./sample_image/test1.txt');
 
 %        1
 %        2
@@ -34,8 +43,7 @@ for k = 1:size(Pose,1)
     Y = Pose(k,1:2:end)';
     X = X(1:14,:);
     Y = Y(1:14,:);
-    figure(1);
-    imshow(ones(300,300),[]);
+    
     hold on;
     plot(X,Y,'go');
     for m = 1:size(Link,1)
