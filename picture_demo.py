@@ -362,5 +362,5 @@ for i in range(17):
 
 toc =time.time()
 print 'time is %.5f'%(toc-tic)     
-cv2.imwrite('result.png',canvas)   
+cv2.imwrite('./sample_image/result.jpg',canvas)   
 
