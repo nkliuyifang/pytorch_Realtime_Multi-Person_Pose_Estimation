@@ -23,11 +23,11 @@ import scipy.io as sio
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', type = str)
+parser.add_argument('name', type = str, help = 'the name of avi or image')
+parser.add_argument('aori', type = str, help = 'the type of input data: (avi or jpg)')
+parser.add_argument('scale', type = float, help = 'scale: (0.1~1)')
 args = parser.parse_args()
 
-#video_name = 'sample_image/' + args.name + '.avi'
-#print(video_name)
 
 torch.set_num_threads(1)
 weight_name = './model/pose_model.pth'
@@ -157,18 +157,64 @@ tic = time.time()
 if os.path.exists('sample_image/'+args.name+'.txt'):
     os.remove('sample_image/'+args.name+'.txt')
 
-cap = cv2.VideoCapture('sample_image/'+args.name+'.avi')
-kk = 0
-while(cap.isOpened()):
-    print(kk)
-    kk += 1
-    ret, oriImg = cap.read()
-
-    if oriImg is None:
-        break
+if args.aori == 'avi':
+    cap = cv2.VideoCapture('sample_image/'+args.name+'.avi')
+    kk = 0
+    while(cap.isOpened()):
+        print(kk)
+        kk += 1
+        ret, oriImg = cap.read()
+    
+        if oriImg is None:
+            break
+    
+        rows, cols, channels = oriImg.shape
+        SCALE = args.scale #120.0/rows
+        oriImg = cv2.resize(oriImg, (int(SCALE*cols), int(SCALE*rows)), interpolation=cv2.INTER_CUBIC)
+    
+        imageToTest = Variable(T.transpose(T.transpose(T.unsqueeze(torch.from_numpy(oriImg).float(),0),2,3),1,2),volatile=True).cuda()
+        multiplier = [x * model_['boxsize'] / oriImg.shape[0] for x in param_['scale_search']]
+        heatmap_avg = torch.zeros((len(multiplier),19,oriImg.shape[0], oriImg.shape[1])).cuda()
+    
+        for m in range(len(multiplier)):
+            scale = multiplier[m]
+            h = int(oriImg.shape[0]*scale)
+            w = int(oriImg.shape[1]*scale)
+            pad_h = 0 if (h%model_['stride']==0) else model_['stride'] - (h % model_['stride'])
+            pad_w = 0 if (w%model_['stride']==0) else model_['stride'] - (w % model_['stride'])
+            new_h = h+pad_h
+            new_w = w+pad_w
+            imageToTest = cv2.resize(oriImg, (0,0), fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+            imageToTest_padded, pad = util.padRightDownCorner(imageToTest, model_['stride'], model_['padValue'])
+            imageToTest_padded = np.transpose(np.float32(imageToTest_padded[:,:,:,np.newaxis]), (3,2,0,1))/256 - 0.5
+            feed = Variable(T.from_numpy(imageToTest_padded)).cuda()
+            output1,output2 = model(feed)
+            heatmap = nn.UpsamplingBilinear2d((oriImg.shape[0], oriImg.shape[1])).cuda()(output2)
+            heatmap_avg[m] = heatmap[0].data
+    
+        heatmap_avg = T.transpose(T.transpose(T.squeeze(T.mean(heatmap_avg, 0)),0,1),1,2).cuda()
+        heatmap_avg = heatmap_avg.cpu().numpy()
+        all_peaks = []
+        peak_counter = 0
+    
+        f = open('sample_image/'+args.name+'.txt','a+')
+        for part in range(18):
+            map_ori = heatmap_avg[:,:,part]
+            map = gaussian_filter(map_ori, sigma=3)
+    
+            peak_0, peak_1 = divmod(np.argmax(map),oriImg.shape[1])
+    
+            f.write(str(peak_0+1)+' '+str(peak_1+1)+' ')
+        f.write('\n')
+        f.close()
+    
+    cap.release()
+    
+if args.aori == 'jpg':
+    oriImg = cv2.imread('sample_image/'+args.name+'.jpg')
 
     rows, cols, channels = oriImg.shape
-    SCALE = 120.0/rows
+    SCALE = args.scale #120.0/rows
     oriImg = cv2.resize(oriImg, (int(SCALE*cols), int(SCALE*rows)), interpolation=cv2.INTER_CUBIC)
 
     imageToTest = Variable(T.transpose(T.transpose(T.unsqueeze(torch.from_numpy(oriImg).float(),0),2,3),1,2),volatile=True).cuda()
@@ -206,5 +252,3 @@ while(cap.isOpened()):
         f.write(str(peak_0+1)+' '+str(peak_1+1)+' ')
     f.write('\n')
     f.close()
-
-cap.release()
